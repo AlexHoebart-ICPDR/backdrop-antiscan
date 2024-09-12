@@ -82,3 +82,13 @@ function antiscan_update_1003() {
   $config->set('threshold_window', 3600);
   $config->save();
 }
+
+/**
+ *  Add and initialize new variables.
+ *
+ */
+function antiscan_update_1004() {
+  $config = config('antiscan.settings');
+  $config->set('threshold_warning', '<h1>Suspicious activity detected. Your IP address @ip will be blocked if you continue such attempts.</h1>');
+  $config->save();
+}

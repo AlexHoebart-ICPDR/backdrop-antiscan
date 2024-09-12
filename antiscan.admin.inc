@@ -58,6 +58,7 @@ function antiscan_form($form, &$form_state) {
   $threshold_enabled = $config->get('threshold_enabled');
   $threshold_limit   = $config->get('threshold_limit');
   $threshold_window  = $config->get('threshold_window');
+  $threshold_warning = $config->get('threshold_warning');
 
   if ($threshold_enabled) {
     $threshold = $threshold_limit . ' ' . t('time(s) per') . ' ' . $threshold_window . ' ' . t('seconds');
@@ -70,7 +71,7 @@ function antiscan_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('Threshold limit and window:') . ' ' . $threshold,
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => !$threshold_enabled,
   );
 
   $form['threshold']['threshold_enabled'] = array(
@@ -116,6 +117,18 @@ function antiscan_form($form, &$form_state) {
   $form['threshold']['description'] = array(
     '#markup' => '<hr><ul><li>' . t('threshold limit - the number of times an IP address can access restricted path during the threshold window before they are blocked;') . '</li>'
     . '<li>' . t('threshold window - the time period in which to consider attacks. 3600 seconds is one hour.') . '</li></ul>'
+  );
+
+  $form['threshold']['threshold_warning'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Warning message'),
+    '#default_value' => $threshold_warning,
+    '#description' => t("Warning message to be displayed for requests within the threshold limit. @ip will be replaced with the client's IP address. Leave blank to display no message."),
+    '#states' => array(
+      'disabled' => array(
+        ':input[name="threshold_enabled"]' => array('checked' => FALSE),
+      ),
+    ),
   );
 
   $blocked_ua = $config->get('blocked_ua');
@@ -234,6 +247,7 @@ function antiscan_form_submit($form, &$form_state) {
   $threshold_enabled = (int) $form_state['values']['threshold_enabled'];
   $threshold_limit   = (int) $form_state['values']['threshold_limit'];
   $threshold_window  = (int) $form_state['values']['threshold_window'];
+  $threshold_warning = trim($form_state['values']['threshold_warning']);
 
   $config->set('path_patterns',     strtolower($path_patterns));
   $config->set('path_noblock',      strtolower($path_noblock));
@@ -242,6 +256,7 @@ function antiscan_form_submit($form, &$form_state) {
   $config->set('threshold_enabled', $threshold_enabled);
   $config->set('threshold_limit',   $threshold_limit);
   $config->set('threshold_window',  $threshold_window);
+  $config->set('threshold_warning',  $threshold_warning);
 
   if (isset($form_state['values']['abuseipdb_report'])) {
     $config->set('abuseipdb_report', $form_state['values']['abuseipdb_report']);

@@ -154,8 +154,8 @@ function antiscan_action($ip, $type, $subject) {
   $threshold_enabled = $config->get('threshold_enabled');
   $window            = intval($config->get('threshold_window'));
   $limit             = intval($config->get('threshold_limit'));
+  $pre_ban_message   = $config->get('threshold_warning');
 
-  $pre_ban_message   = '<h1>Suspicious activity detected. Your IP address ' . $ip . ' will be blocked if you continue such attempts.</h1>';
   $ban_message       = '<h1>Suspicious activity detected, your IP address ' . $ip . ' has been blocked.</h1>';
   $ban_test_message  = '<p>Blocking reason: ' . $type . ' is ' . $subject . '</p>'
     . '<h2>This is not a real blocking - the test mode of the "Antiscan" module is on!</h2>';
@@ -167,7 +167,6 @@ function antiscan_action($ip, $type, $subject) {
   }
 
   if (!antiscan_logged_in_ip($ip)) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
     $reason = 'Other';
     switch ($type) {
       case 'path':
@@ -184,9 +183,12 @@ function antiscan_action($ip, $type, $subject) {
                 array('%ip' => $ip, '%subject' => $subject),
                 WATCHDOG_WARNING
               );
-              print $pre_ban_message;
-              exit();
             }
+            if ($pre_ban_message) {
+              backdrop_set_message(t($pre_ban_message, array('@ip' => $ip)), 'warning');
+            }
+            // Don't block yet.
+            return;
           }
         }
 
@@ -196,14 +198,18 @@ function antiscan_action($ip, $type, $subject) {
         else {
           $reason = 'Request: ' . $subject;
         }
+        $response = '429 Too Many Requests';
         break;
       case 'ua':
         $reason = 'Blocked User-Agent: ' . $subject;
+        $response = '403 Forbidden';
         break;
       case 'referrer':
         $reason = 'Spam referrer: ' . $subject;
+        $response = '403 Forbidden';
         break;
     }
+    header($_SERVER['SERVER_PROTOCOL'] . ' ' . $response);
     print $ban_message;
     antiscan_block_ip($ip, $reason, $type);
     exit();

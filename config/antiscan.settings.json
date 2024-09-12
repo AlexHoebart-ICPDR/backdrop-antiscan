@@ -11,5 +11,6 @@
   "abuseipdb_report": 0,
   "threshold_enabled": 0,
   "threshold_limit": 1,
-  "threshold_window": 3600
+  "threshold_window": 3600,
+  "threshold_warning": "<h1>Suspicious activity detected. Your IP address @ip will be blocked if you continue such attempts.</h1>"
 }
